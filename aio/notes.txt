@@ -1,0 +1,5 @@
+"add_book" function appends a book data at the end of "book.bin", we could have modified it to add the data
+in a sorted manner(sorted a/c to "isbn") but that would have required much more computing power for reading
+and writing data. if we would have appended data in a sorted manner our search algorithm may had been more
+effective.
+

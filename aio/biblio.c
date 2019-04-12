@@ -3,7 +3,7 @@
 #include<string.h>
 #include<time.h>
 
-FILE *file_opened = NULL;
+FILE *file_opened = NULL, *temp_file = NULL;
 
 // All the structures to be used typedef(ed)
 // DATE
@@ -29,15 +29,16 @@ typedef struct {
 
 // BOOK
 typedef struct {
-    char isbn[13];
+    char isbn[14];
     char title[20];
+    int quantity;
     char author_id[10];
 } book;
 
 // BOOK WHEN LOANED
 typedef struct {
     char borrow_id[10];
-    char isbn[13];
+    char isbn[14];
     char user_id[10];
     date *issuing;
     date *returning;
@@ -45,20 +46,33 @@ typedef struct {
 } book_loaned;
 
 // helper function's definitions
-// adds 'n' books to book.bin
+// add a single book data to book.bin
 void add_book(book *book_to_add) {
-    
-}
-
-// deletes 'n' books from book.bin
-void delete_books() {
-
-}
-
-// searches for 'n' books with user specified filters
-void search_book(char the_isbn[13]) {
-    file_opened = fopen("book.bin", "rb");
+    file_opened = fopen("book.bin", "ab");
+    fseek(file_opened, 0, SEEK_END);
+    fwrite(book_to_add, sizeof(book), 1, file_opened);
     fclose(file_opened);
+}
+
+// deletes a book from book.bin
+void delete_book() {
+
+}
+
+// return 1 if the requested author_id exists in author.bin else 0
+void search_book(char *req_isbn) {
+    book temp;
+    file_opened = fopen("book.bin", "rb");
+    
+    while(fread(&temp, sizeof(book), 1, file_opened)) {
+        if(req_isbn == temp.isbn) {
+            fclose(file_opened);
+            return 1;
+        }
+    }
+
+    fclose(file_opened);
+    return 0;
 }
 
 // return 1 if the requested author_id exists in author.bin else 0
