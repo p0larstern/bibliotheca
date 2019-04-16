@@ -31,8 +31,9 @@ typedef struct {
 typedef struct {
     char isbn[14];
     char title[20];
-    int quantity;
     char author_id[10];
+    int quantity;
+    int deleted;
 } book;
 
 // BOOK WHEN LOANED
@@ -54,13 +55,63 @@ void add_book(book *book_to_add) {
     fclose(file_opened);
 }
 
-// deletes a book from book.bin
-void delete_book() {
-
+// add a single author data to author.bin
+void add_author(author *author_to_add) {
+    file_opened = fopen("author.bin", "ab");
+    fseek(file_opened, 0, SEEK_END);
+    fwrite(author_to_add, sizeof(author), 1, file_opened);
+    fclose(file_opened);
 }
 
-// return 1 if the requested author_id exists in author.bin else 0
-void search_book(char *req_isbn) {
+// deletes a book from book.bin
+void delete_book(char *req_isbn) {
+    book temp;
+    file_opened = fopen("book.bin", "a+b");
+    fseek(file_opened, 0, SEEK_SET);
+    while(fread(&temp, sizeof(book), 1, file_opened)) {
+        if(req_isbn == temp.isbn) {
+            temp.deleted = 1;
+            fseek(file_opened, -1, SEEK_CUR);
+            fwrite(&temp, sizeof(book), 1, file_opened);
+            printf("\nBook deleted.");
+        }
+    }
+}
+
+/* return 1 if the requested attribute exists in book.bin else 0
+    1 : isbn
+    2 : title
+    3 : author_id
+*/
+int search_book(char *req_attr, int type_attr) {
+    book temp;
+    char **temp_attr;
+    file_opened = fopen("book.bin", "rb");
+
+    switch(type_attr) {
+        case 1 : temp_attr = &temp.isbn;
+                break;
+        case 2 : temp_attr = &temp.title;
+                break;
+        case 3 : temp_attr = &temp.author_id;
+                break;
+        default : return 0;
+    }
+
+    while(fread(&temp, sizeof(book), 1, file_opened)) {
+        if(req_attr == *temp_attr && temp.deleted == 0) {
+            fclose(file_opened);
+            return 1;
+        }
+    }
+
+    fclose(file_opened);
+    return 0;
+}
+
+/*
+// return 1 if the requested isbn exists in book.bin else 0
+int search_book_by_isbn(char *req_isbn) {
     book temp;
     file_opened = fopen("book.bin", "rb");
     
@@ -75,8 +126,55 @@ void search_book(char *req_isbn) {
     return 0;
 }
 
+// return 1 if the requested title exists in book.bin else 0
+int search_book_by_title(char *req_title) {
+    book temp;
+    file_opened = fopen("book.bin", "rb");
+    
+    while(fread(&temp, sizeof(book), 1, file_opened)) {
+        if(req_title == temp.title) {
+            fclose(file_opened);
+            return 1;
+        }
+    }
+
+    fclose(file_opened);
+    return 0;
+}*/
+
+/* return 1 if the requested attribute exists in author.bin else 0
+    1 : author_id
+    2 : first_name
+    3 : last_name
+*/
+int search_author(char *req_attr, int type_attr) {
+    author temp;
+    char **temp_attr;
+    file_opened = fopen("author.bin", "rb");
+
+    switch(type_attr) {
+        case 1 : temp_attr = &temp.author_id;
+                break;
+        case 2 : temp_attr = &temp.first_name;
+                break;
+        case 3 : temp_attr = &temp.last_name;
+                break;
+        default : return 0;
+    }
+
+    while(fread(&temp, sizeof(author), 1, file_opened)) {
+        if(req_attr == *temp_attr) {
+            fclose(file_opened);
+            return 1;
+        }
+    }
+
+    fclose(file_opened);
+    return 0;
+}
+/*
 // return 1 if the requested author_id exists in author.bin else 0
-int search_author(char *req_author_id) {
+int search_author_by_id(char *req_author_id) {
     author temp;
     file_opened = fopen("author.bin", "rb");
 
@@ -91,6 +189,38 @@ int search_author(char *req_author_id) {
     return 0;
 }
 
+// return 1 if the requested first_name exists in author.bin else 0
+int search_author_by_fname(char *req_first_name) {
+    author temp;
+    file_opened = fopen("author.bin", "rb");
+
+    while(fread(&temp, sizeof(author), 1, file_opened)) {
+        if(req_first_name == temp.first_name) {
+            fclose(file_opened);
+            return 1;
+        }
+    }
+
+    fclose(file_opened);
+    return 0;
+}
+
+// return 1 if the requested first_name exists in author.bin else 0
+int search_author_by_lname(char *req_last_name) {
+    author temp;
+    file_opened = fopen("author.bin", "rb");
+
+    while(fread(&temp, sizeof(author), 1, file_opened)) {
+        if(req_last_name == temp.last_name) {
+            fclose(file_opened);
+            return 1;
+        }
+    }
+
+    fclose(file_opened);
+    return 0;
+}
+*/
 // issues 'n' books, depending on existence in book.bin
 void issue_books() {
 
