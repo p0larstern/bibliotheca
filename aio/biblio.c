@@ -18,6 +18,7 @@ typedef struct {
     char user_id[10];
     char name[15];
     char phone[10];
+    int deleted;
 } user;
 
 // AUTHOR
@@ -46,6 +47,15 @@ typedef struct {
     date *returned;
 } book_loaned;
 
+// BOOK LEDGER (BOOK LOAN QUEUE)
+typedef struct {
+    int capacity;
+    int size;
+    int front;
+    int rear;
+    book_loaned *elements;
+} book_ledgar;
+
 // helper function's definitions
 // add a single book data to book.bin
 void add_book(book *book_to_add) {
@@ -63,6 +73,14 @@ void add_author(author *author_to_add) {
     fclose(file_opened);
 }
 
+// add a single user data to user.bin
+void add_author(user *user_to_add) {
+    file_opened = fopen("user.bin", "ab");
+    fseek(file_opened, 0, SEEK_END);
+    fwrite(user_to_add, sizeof(user), 1, file_opened);
+    fclose(file_opened);
+}
+
 // deletes a book from book.bin
 void delete_book(char *req_isbn) {
     book temp;
@@ -74,6 +92,21 @@ void delete_book(char *req_isbn) {
             fseek(file_opened, -1, SEEK_CUR);
             fwrite(&temp, sizeof(book), 1, file_opened);
             printf("\nBook deleted.");
+        }
+    }
+}
+
+// deletes a user from user.bin
+void delete_user(char *req_user_id) {
+    user temp;
+    file_opened = fopen("user.bin", "a+b");
+    fseek(file_opened, 0, SEEK_SET);
+    while(fread(&temp, sizeof(user), 1, file_opened)) {
+        if(req_user_id == temp.user_id) {
+            temp.deleted = 1;
+            fseek(file_opened, -1, SEEK_CUR);
+            fwrite(&temp, sizeof(user), 1, file_opened);
+            printf("\nUser deleted.");
         }
     }
 }
@@ -221,6 +254,23 @@ int search_author_by_lname(char *req_last_name) {
     return 0;
 }
 */
+
+// return 1 if the requested user_id exists in user.bin else 0
+int search_user(char *req_user_id) {
+    user temp;
+    file_opened = fopen("user.bin", "rb");
+    
+    while(fread(&temp, sizeof(user), 1, file_opened)) {
+        if(req_user_id == temp.user_id && temp.deleted == 0) {
+            fclose(file_opened);
+            return 1;
+        }
+    }
+
+    fclose(file_opened);
+    return 0;
+}
+
 // issues 'n' books, depending on existence in book.bin
 void issue_books() {
 
@@ -243,10 +293,32 @@ date *get_date() {
     return new_date;
 }
 
+// functions to work book ledger (book loan queue)
+// create book ledgar by book_loaned.bin
+book_ledgar *create_ledger(int max_space) {
+    file_opened = fopen("book_loaned.bin", "rb");
+    book_loaned temp;
+    book_ledgar *new_lg;
+
+    new_lg = (book_ledgar *)malloc(sizeof(book_ledgar));
+    new_lg->elements = (book_loaned *)malloc(sizeof(book_loaned)*max_space);
+    new_lg->size = 0;
+    new_lg->capacity = max_space;
+    new_lg->front = -1;
+    new_lg->rear = -1;
+    
+    while(fread(&temp, sizeof(book_loaned), 1, file_opened)) {
+        enqueue(new_lg, &temp);
+    }
+    fclose(file_opened);
+    return new_lg;
+}
+
 //----------------MAIN---------------
 void main() {
+    book_ledgar *ledger;
     int menu_option;
-    //before menu start stuff
+    ledger = create_ledger(50);
 
     do {
         printf("\n\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2 MAIN MENU \xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2");
@@ -255,28 +327,34 @@ void main() {
         printf("\n\xDB\xDB\xDB\xB2%-31s\xB2\xDB\xDB\xDB", "3. Search Books");
         printf("\n\xDB\xDB\xDB\xB2%-31s\xB2\xDB\xDB\xDB", "4. Issue Books");
         printf("\n\xDB\xDB\xDB\xB2%-31s\xB2\xDB\xDB\xDB", "5. Return Books");
-        printf("\n\xDB\xDB\xDB\xB2%-31s\xB2\xDB\xDB\xDB", "6. Close Application");
+        printf("\n\xDB\xDB\xDB\xB2%-31s\xB2\xDB\xDB\xDB", "6. Add Users");
+        printf("\n\xDB\xDB\xDB\xB2%-31s\xB2\xDB\xDB\xDB", "7. Delete Users");
+        printf("\n\xDB\xDB\xDB\xB2%-31s\xB2\xDB\xDB\xDB", "8. Close Application");
         printf("\n\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2\xB2");
         do {
             printf("\nEnter option:");
             scanf("%d", &menu_option);
             switch(menu_option) {
-                default: printf("\nInvalid option!\n");
+                default : printf("\nInvalid option!\n");
                         break;
-                case 1: add_books();
+                case 1 : add_books();
                         break;
-                case 2: delete_books();
+                case 2 : delete_books();
                         break;
-                case 3: search_books();
+                case 3 : search_books();
                         break;
-                case 4: issue_books();
+                case 4 : issue_books();
                         break;
-                case 5: return_books();
+                case 5 : return_books();
                         break;
-                case 6: return;   
+                case 6 : add_users();
+                        break;
+                case 7 : delete_users();
+                        break;
+                case 8 : return;   
             }
-        } while(menu_option > 6 || menu_option < 1);    
-    } while(menu_option != 6);
+        } while(menu_option > 8 || menu_option < 1);    
+    } while(menu_option != 8);
 
     //after menu exit stuff
 }
