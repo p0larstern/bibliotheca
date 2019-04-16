@@ -74,7 +74,7 @@ void add_author(author *author_to_add) {
 }
 
 // add a single user data to user.bin
-void add_author(user *user_to_add) {
+void add_user(user *user_to_add) {
     file_opened = fopen("user.bin", "ab");
     fseek(file_opened, 0, SEEK_END);
     fwrite(user_to_add, sizeof(user), 1, file_opened);
@@ -314,6 +314,56 @@ book_ledgar *create_ledger(int max_space) {
     return new_lg;
 }
 
+// check whether the ledger is full or not
+int is_full(book_ledgar *lg) {
+    if((lg->front == lg->rear + 1) || (lg->front == 0 && lg->rear == lg->capacity-1)) {
+        return 1;
+    }
+    return 0;
+}
+
+// check whether the ledger is empty or not
+int is_empty(book_ledgar *lg) {
+    if(lg->front == -1){
+        return 1;
+    }
+    return 0;
+}
+
+void enqueue(book_ledgar *lg, book_loaned *element) {
+    if(lg->front == -1) {
+        lg->front = 0;
+    }
+    lg->rear = (lg->rear + 1) % lg->capacity;
+    lg->elements[lg->rear] = *element;
+}
+
+
+book_loaned *dequeue(book_ledgar *lg) {
+    book_loaned *element;
+    element = (book_loaned *)malloc(sizeof(book_loaned));
+    *element = lg->elements[lg->front];
+    if (lg->front == lg->rear){
+        lg->front = -1;
+        lg->rear = -1;
+    } /* lghas only one element, so we reset the queue after dequeing it. ? */
+    else {
+        lg->front = (lg->front + 1) % lg->capacity;
+    }
+    return element;
+}
+
+// updates book_loaned.bin a/c to final ledger
+void finalize_ledger(book_ledgar *lg) {
+    file_opened = fopen("book_loaned.bin", "wb");
+    book_loaned *temp;
+
+    while(!is_empty(lg)) {
+        temp = dequeue(lg);
+        fwrite(&temp, sizeof(book_loaned), 1, file_opened);
+    }
+}
+
 //----------------MAIN---------------
 void main() {
     book_ledgar *ledger;
@@ -356,5 +406,6 @@ void main() {
         } while(menu_option > 8 || menu_option < 1);    
     } while(menu_option != 8);
 
-    //after menu exit stuff
+    finalize_ledger(ledger);
+    exit(0);
 }
