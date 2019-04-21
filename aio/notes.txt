@@ -3,3 +3,5 @@ in a sorted manner(sorted a/c to "isbn") but that would have required much more 
 and writing data. if we would have appended data in a sorted manner our search algorithm may had been more
 effective.
 
+the layering of functions all the way from menu options to very basic performing tasks ones is present so
+that the code is maintainable and ready to accomodate new features in future.
