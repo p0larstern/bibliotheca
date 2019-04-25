@@ -5,3 +5,12 @@ effective.
 
 the layering of functions all the way from menu options to very basic performing tasks ones is present so
 that the code is maintainable and ready to accomodate new features in future.
+
+the problem will arise if the binary files are empty, the possible solution to this is to keep the first
+object in binary file any random meaningless value and modify every function to start its operation
+from the next object of the corresponding objects.
+
+delete_book funtion is present which would completely wipe the data of requested book but it is not used
+as we are just reducing the no. of books admin wants to delete.
+
+many new features can be added like when will the book be available for issue, multiple servers, etc.
